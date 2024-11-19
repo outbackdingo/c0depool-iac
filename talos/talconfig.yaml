@@ -6,85 +6,77 @@ talosVersion: v1.7.1
 kubernetesVersion: v1.30.0
 
 clusterName: c0depool-talos-cluster
-endpoint: https://192.168.0.199:6443
+endpoint: https://192.168.10.199:6443
 clusterPodNets:
   - 10.14.0.0/16
 clusterSvcNets:
   - 10.15.0.0/16
 additionalApiServerCertSans:
-  - 192.168.0.199
+  - 192.168.10.199
   - 127.0.0.1
 additionalMachineCertSans:
-  - 192.168.0.199
+  - 192.168.10.199
   - 127.0.0.1
 nodes:
   - hostname: talos-master-00
     controlPlane: true
-    ipAddress: 192.168.0.170
+    ipAddress: 192.168.10.170
     installDisk: /dev/sda
     talosImageURL: factory.talos.dev/installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "00:00:00:00:00:00"
+          hardwareAddr: "16:0d:e2:6f:c3:b1"
         dhcp: false
         vip:
-          ip: 192.168.0.199
+          ip: 192.168.10.199
   - hostname: talos-master-01
     controlPlane: true
-    ipAddress: 192.168.0.171
+    ipAddress: 192.168.10.171
     installDisk: /dev/sda
     talosImageURL: factory.talos.dev/installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "00:00:00:00:00:00"
+          hardwareAddr: "4e:60:4b:ef:f8:0d"
         dhcp: false
         vip:
-          ip: 192.168.0.199
+          ip: 192.168.10.199
   - hostname: talos-master-02
     controlPlane: true
-    ipAddress: 192.168.0.172
+    ipAddress: 192.168.10.172
     installDisk: /dev/sda
     talosImageURL: factory.talos.dev/installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "00:00:00:00:00:00"
+          hardwareAddr: "f6:ee:c1:44:9b:82"
         dhcp: false
         vip:
-          ip: 192.168.0.199
+          ip: 192.168.10.199
   - hostname: talos-worker-00
     controlPlane: false
-    ipAddress: 192.168.0.180
+    ipAddress: 192.168.10.180
     installDisk: /dev/sda
     talosImageURL: factory.talos.dev/installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "00:00:00:00:00:00"
+          hardwareAddr: "46:a4:50:f3:47:a5"
         dhcp: false
-    patches:
-      - |-
-        machine:
-          udev:
-            rules:
-              - SUBSYSTEM=="drm", KERNEL=="renderD*", GROUP="44", MODE="0660"
-              - SUBSYSTEM=="drm", KERNEL=="card*", GROUP="44", MODE="0660"
-
   - hostname: talos-worker-01
     controlPlane: false
-    ipAddress: 192.168.0.181
+    ipAddress: 192.168.10.181
     installDisk: /dev/sda
     talosImageURL: factory.talos.dev/installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "00:00:00:00:00:00"
+          hardwareAddr: "2a:69:79:3b:d0:56"
         dhcp: false
   - hostname: talos-worker-02
     controlPlane: false
-    ipAddress: 192.168.0.182
+    ipAddress: 192.168.10.182
     installDisk: /dev/sda
     talosImageURL: factory.talos.dev/installer/613e1592b2da41ae5e265e8789429f22e121aab91cb4deb6bc3c0b6262961245
     networkInterfaces:
       - deviceSelector:
-          hardwareAddr: "00:00:00:00:00:00"
+          hardwareAddr: "1e:a8:73:99:08:35"
         dhcp: false
 
 patches:
@@ -92,6 +84,10 @@ patches:
   # Force nameserver
   - |-
     machine:
+      udev:
+        rules:
+          - SUBSYSTEM=="drm", KERNEL=="renderD*", GROUP="44", MODE="0660"
+          - SUBSYSTEM=="drm", KERNEL=="card*", GROUP="44", MODE="0660"
       network:
         nameservers:
           - 1.1.1.1
@@ -104,10 +100,30 @@ patches:
         disabled: false
         servers: ["time.cloudflare.com"]
 
+    cluster:
+      externalCloudProvider:
+        enabled: true
+        manifests:
+          - https://raw.githubusercontent.com/siderolabs/talos-cloud-controller-manager/main/docs/deploy/cloud-controller-manager.yml
+          - https://raw.githubusercontent.com/sergelogvinov/proxmox-csi-plugin/main/docs/deploy/proxmox-csi-plugin.yml
+
 controlPlane:
   patches:
-    # Cluster configuration
     - |-
+      # Talos machine config
+      machine:
+        kubelet:
+          extraArgs:
+            # For security reasons, it is recommended to enable the rotation of server certificates.
+            rotate-server-certificates: true
+        features:
+          kubernetesTalosAPIAccess:
+            enabled: true
+            allowedRoles:
+              - os:reader
+            allowedKubernetesNamespaces:
+              - kube-system
+      # Cluster configuration
       cluster:
         # allowSchedulingOnControlPlanes: true
         controllerManager:
@@ -125,17 +141,10 @@ worker:
   patches:
     # Machine configuration
     - |-
+      # Talos machine config
       machine:
         kubelet:
-          extraMounts:
-            - destination: /var/mnt/longhorn
-              type: bind
-              source: /var/mnt/longhorn
-              options:
-                - bind
-                - rshared
-                - rw
-        disks:
-            - device: /dev/sdb
-              partitions:
-                - mountpoint: /var/mnt/longhorn
+          extraArgs:
+            cloud-provider: external
+            # For security reasons, it is recommended to enable the rotation of server certificates.
+            rotate-server-certificates: true

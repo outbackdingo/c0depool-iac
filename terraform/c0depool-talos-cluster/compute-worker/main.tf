@@ -21,7 +21,7 @@ resource "proxmox_vm_qemu" "c0depool-talos" {
     
     # VM CPU Settings
     cores = var.nodes[count.index].node_cpu_cores
-    sockets = 1
+    sockets = 2
     cpu = "host"    
     
     # VM Memory Settings
@@ -47,6 +47,24 @@ resource "proxmox_vm_qemu" "c0depool-talos" {
                 }
             }
             scsi1 {
+                disk {
+                    size = var.nodes[count.index].additional_node_disk
+                    format    = "raw"
+                    iothread  = true
+                    backup    = false
+                    storage   = "local-lvm"
+                }
+            }
+            scsi2 {
+                disk {
+                    size = var.nodes[count.index].additional_node_disk
+                    format    = "raw"
+                    iothread  = true
+                    backup    = false
+                    storage   = "local-lvm"
+                }
+            }
+            scsi3 {
                 disk {
                     size = var.nodes[count.index].additional_node_disk
                     format    = "raw"

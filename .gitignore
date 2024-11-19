@@ -38,3 +38,8 @@ config.xml
 kubernetes
 # VS Code
 .vscode
+talos/.sops.yaml
+talos/clusterconfig/
+talos/keys.txt
+talos/talsecret.sops.yaml
+terraform/c0depool-talos-cluster/terraform.log

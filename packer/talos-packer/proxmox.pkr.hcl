@@ -31,11 +31,11 @@ source "proxmox-iso" "talos" {
     cache_mode        = "writethrough"
   }
 
-  memory               = 2048
+  memory               = 8192
   vm_id                = "9700"
   cores                = var.cores
   cpu_type             = var.cpu_type
-  sockets              = "1"
+  sockets              = "2"
   ssh_username         = "root"
   ssh_password         = "packer"
   ssh_timeout          = "15m"

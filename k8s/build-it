@@ -1,0 +1,31 @@
+rm .tfplan
+rm .terraform.lock.hcl
+tofu init
+tofu plan -out .tfplan
+tofu apply ".tfplan"
+cd ../../talos
+vi talconfig.yaml
+talhelper genconfig
+talosctl apply-config --insecure --nodes 192.168.10.170 --file clusterconfig/c0depool-talos-cluster-talos-master-00.yaml
+talosctl apply-config --insecure --nodes 192.168.10.171 --file clusterconfig/c0depool-talos-cluster-talos-master-01.yaml
+talosctl apply-config --insecure --nodes 192.168.10.172 --file clusterconfig/c0depool-talos-cluster-talos-master-02.yaml
+talosctl apply-config --insecure --nodes 192.168.10.180 --file clusterconfig/c0depool-talos-cluster-talos-worker-00.yaml
+talosctl apply-config --insecure --nodes 192.168.10.181 --file clusterconfig/c0depool-talos-cluster-talos-worker-01.yaml
+talosctl apply-config --insecure --nodes 192.168.10.182 --file clusterconfig/c0depool-talos-cluster-talos-worker-02.yaml
+talosctl bootstrap -n 192.168.10.170 -e 192.168.10.170
+cp clusterconfig/talosconfig $HOME/.talos/config
+talosctl -n 192.168.10.170 kubeconfig $HOME/.kube/config\n
+
+
+
+
+master_mac_addrs = [
+  "32:27:ae:cf:f3:17",
+  "1e:31:95:90:f6:0f",
+  "d2:ee:9f:d1:0e:98",
+]
+worker_mac_addrs = [
+  "9a:1b:9e:9f:be:24",
+  "86:8c:b6:1e:ef:50",
+  "4a:4a:cd:9c:b2:d5",
+]

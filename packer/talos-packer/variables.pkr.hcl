@@ -25,7 +25,7 @@ variable "cpu_type" {
 
 variable "cores" {
   type    = string
-  default = "2"
+  default = "4"
 }
 
 variable "cloudinit_storage_pool" {
@@ -35,7 +35,7 @@ variable "cloudinit_storage_pool" {
 
 variable "talos_version" {
   type    = string
-  default = "v1.6.7"
+  default = "v1.8.1"
 }
 
 variable "base_iso_file" {

@@ -125,7 +125,7 @@ controlPlane:
               - kube-system
       # Cluster configuration
       cluster:
-        # allowSchedulingOnControlPlanes: true
+        allowSchedulingOnControlPlanes: true
         controllerManager:
           extraArgs:
             bind-address: 0.0.0.0
